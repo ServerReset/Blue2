@@ -29,6 +29,9 @@ import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.blue2.app.domain.models.*
+import com.blue2.app.ui.theme.CarCardShape
+import com.blue2.app.ui.theme.ControlButtonShape
+import com.blue2.app.ui.theme.StatusChipShape
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.roundToInt
@@ -233,7 +236,7 @@ private fun VehiclePage(
 
 @Composable
 private fun StatusCard(vehicle: Vehicle, status: VehicleStatus?, distanceUnit: String) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(modifier = Modifier.fillMaxWidth(), shape = CarCardShape) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             // Header row: name + lock badge
             Row(
@@ -312,7 +315,7 @@ private fun StatusCard(vehicle: Vehicle, status: VehicleStatus?, distanceUnit: S
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     chipData.forEach { (icon, label, colors) ->
-                        Surface(color = colors.first, shape = MaterialTheme.shapes.small) {
+                        Surface(color = colors.first, shape = StatusChipShape) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                 horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -423,7 +426,7 @@ private fun LockUnlockRow(vin: String, isLocked: Boolean?, viewModel: HomeViewMo
             onClick = { viewModel.lock(vin) },
             enabled = !lockLoading,
             modifier = Modifier.weight(1f).height(80.dp),
-            shape = MaterialTheme.shapes.large,
+            shape = ControlButtonShape,
             colors = ButtonDefaults.buttonColors(
                 containerColor = if (isLocked == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = if (isLocked == true) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer,
@@ -443,7 +446,7 @@ private fun LockUnlockRow(vin: String, isLocked: Boolean?, viewModel: HomeViewMo
             onClick = { viewModel.unlock(vin) },
             enabled = !unlockLoading,
             modifier = Modifier.weight(1f).height(80.dp),
-            shape = MaterialTheme.shapes.large,
+            shape = ControlButtonShape,
             border = BorderStroke(1.dp, SolidColor(if (isLocked == false) errorColor else outlineBorderColor)),
         ) {
             if (unlockLoading) {
@@ -533,6 +536,7 @@ private fun CommandGrid(
                     OutlinedCard(
                         onClick = { if (!loading) cmd.action() },
                         modifier = Modifier.weight(1f),
+                        shape = ControlButtonShape,
                     ) {
                         Row(
                             modifier = Modifier.padding(14.dp).fillMaxWidth(),
@@ -682,6 +686,7 @@ private fun LocationSheet(lat: Double, lon: Double, onDismiss: () -> Unit) {
 private fun ClimateStatusCard(status: VehicleStatus, tempUnit: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
+        shape = CarCardShape,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -775,7 +780,7 @@ private fun DiagnosticsCard(status: VehicleStatus, distanceUnit: String) {
             status.tirePressureWarning || status.engineOilLife != null
     if (!hasData) return
 
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(modifier = Modifier.fillMaxWidth(), shape = CarCardShape) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(Icons.Rounded.Build, null, tint = MaterialTheme.colorScheme.primary)
@@ -925,16 +930,20 @@ private fun ClimateToggleRow(label: String, checked: Boolean, onToggle: (Boolean
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SeatHeatSelector(label: String, current: SeatHeatingLevel, onSelect: (SeatHeatingLevel) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    val levels = SeatHeatingLevel.entries
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(label, style = MaterialTheme.typography.bodyMedium)
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            SeatHeatingLevel.entries.forEach { level ->
-                FilterChip(
+        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+            levels.forEachIndexed { index, level ->
+                SegmentedButton(
                     selected = current == level,
                     onClick = { onSelect(level) },
+                    shape = SegmentedButtonDefaults.itemShape(index = index, count = levels.size),
                     label = { Text(when (level) { SeatHeatingLevel.OFF -> "Off"; SeatHeatingLevel.LOW -> "Lo"; SeatHeatingLevel.MEDIUM -> "Med"; SeatHeatingLevel.HIGH -> "Hi" }) },
+                    icon = {},
                 )
             }
         }
@@ -971,7 +980,7 @@ private fun ChargeTargetDialog(onDismiss: () -> Unit, onConfirm: (Int, Int) -> U
 
 @Composable
 private fun RecentCommandsSection(commands: List<CommandRecord>, onClear: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(modifier = Modifier.fillMaxWidth(), shape = CarCardShape) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
