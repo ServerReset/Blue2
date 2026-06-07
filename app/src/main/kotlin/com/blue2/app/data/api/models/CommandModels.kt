@@ -37,7 +37,6 @@ data class UsChargeBody(
 data class UsCommandBody(
     @Json(name = "userName") val userName: String,
     @Json(name = "vin") val vin: String,
-    @Json(name = "pin") val pin: String = "",
 )
 
 @JsonClass(generateAdapter = true)

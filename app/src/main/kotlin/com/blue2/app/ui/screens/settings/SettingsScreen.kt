@@ -98,31 +98,12 @@ fun SettingsScreen(
                         }
                     }
 
-                    Spacer(Modifier.height(12.dp))
-                    Text("Style", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(Modifier.height(4.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf(
-                            "material_expressive" to "Material",
-                            "liquid_glass" to "Liquid Glass",
-                            "one_ui" to "One UI",
-                        ).forEach { (key, label) ->
-                            FilterChip(
-                                selected = state.themeStyle == key,
-                                onClick = { viewModel.setThemeStyle(key) },
-                                label = { Text(label, maxLines = 1) },
-                                modifier = Modifier.weight(1f),
-                            )
-                        }
-                    }
-
                     Spacer(Modifier.height(8.dp))
                     SettingsSwitch(
                         label = "Dynamic Color (Material You)",
-                        description = "Use system wallpaper colors (Material style only)",
+                        description = "Use system wallpaper colors",
                         checked = state.dynamicColor,
                         onCheckedChange = viewModel::setDynamicColor,
-                        enabled = state.themeStyle == "material_expressive",
                     )
                     SettingsSwitch(
                         label = "AMOLED Mode",

@@ -4,163 +4,225 @@ import com.blue2.app.data.api.models.*
 import retrofit2.Response
 import retrofit2.http.*
 
-// US Hyundai Bluelink — CCNC API
-// Base URL: https://api.telematics.hyundaiusa.com/
+// US Hyundai Bluelink — CCNC API (api.telematics.hyundaiusa.com)
+// Headers sourced from hyundai_kia_connect_api open-source project
 interface UsBluelinkApiService {
 
     // ─── Auth ─────────────────────────────────────────────────────────────
 
+    @Headers("from: SPA", "to: ISS", "language: 0", "encryptFlag: false", "brandIndicator: H")
     @POST("v2/ac/oauth/token")
     suspend fun login(
         @Header("client_id") clientId: String,
-        @Header("client_secret") clientSecret: String,
+        @Header("clientSecret") clientSecret: String,
         @Body request: UsLoginRequest,
-    ): Response<UsLoginResponse>
-
-    @POST("v2/ac/oauth/token/refresh")
-    suspend fun refreshToken(
-        @Header("client_id") clientId: String,
-        @Header("client_secret") clientSecret: String,
-        @Body request: UsRefreshRequest,
     ): Response<UsLoginResponse>
 
     // ─── Vehicles ──────────────────────────────────────────────────────────
 
+    @Headers("from: SPA", "to: ISS", "language: 0", "encryptFlag: false", "brandIndicator: H")
     @GET("ac/v2/enrollment/details/{email}")
     suspend fun getEnrollmentDetails(
         @Path("email") email: String,
-        @Header("access_token") accessToken: String,
+        @Header("accessToken") accessToken: String,
         @Header("client_id") clientId: String,
-        @Header("deviceId") deviceId: String,
+        @Header("clientSecret") clientSecret: String,
+        @Header("blueLinkServicePin") pin: String,
+        @Header("username") username: String,
+        @Header("offset") offset: String,
     ): Response<UsEnrollmentResponse>
 
     // ─── Vehicle Status ────────────────────────────────────────────────────
 
-    // Cached status (fast)
+    @Headers("from: SPA", "to: ISS", "language: 0", "encryptFlag: false", "brandIndicator: H")
     @GET("ac/v2/rcs/rvs/vehicleStatus")
-    suspend fun getVehicleStatusCached(
-        @Header("access_token") accessToken: String,
+    suspend fun getVehicleStatus(
+        @Header("accessToken") accessToken: String,
         @Header("client_id") clientId: String,
-        @Header("vehicleId") vehicleId: String,
-        @Header("VIN") vin: String,
-    ): Response<UsVehicleStatusResponse>
-
-    // Live/forced refresh status
-    @GET("ac/v2/rcs/rvs/vehicleStatus")
-    suspend fun getVehicleStatusRefresh(
-        @Header("access_token") accessToken: String,
-        @Header("client_id") clientId: String,
-        @Header("vehicleId") vehicleId: String,
-        @Header("VIN") vin: String,
-        @Query("REFRESH") refresh: Boolean = true,
+        @Header("clientSecret") clientSecret: String,
+        @Header("blueLinkServicePin") pin: String,
+        @Header("username") username: String,
+        @Header("registrationId") registrationId: String,
+        @Header("gen") gen: String,
+        @Header("vin") vin: String,
+        @Header("offset") offset: String,
+        @Header("REFRESH") refresh: String? = null,
     ): Response<UsVehicleStatusResponse>
 
     // ─── Lock / Unlock ────────────────────────────────────────────────────
 
+    @Headers("from: SPA", "to: ISS", "language: 0", "encryptFlag: false", "brandIndicator: H")
     @POST("ac/v2/rcs/rdo/off")
     suspend fun lockDoors(
-        @Header("access_token") accessToken: String,
+        @Header("accessToken") accessToken: String,
         @Header("client_id") clientId: String,
-        @Header("vehicleId") vehicleId: String,
-        @Header("VIN") vin: String,
+        @Header("clientSecret") clientSecret: String,
+        @Header("blueLinkServicePin") pin: String,
+        @Header("username") username: String,
+        @Header("registrationId") registrationId: String,
+        @Header("gen") gen: String,
+        @Header("vin") vin: String,
+        @Header("APPCLOUD-VIN") appcloudVin: String,
+        @Header("offset") offset: String,
         @Body body: UsCommandBody,
     ): Response<UsCommandResponse>
 
+    @Headers("from: SPA", "to: ISS", "language: 0", "encryptFlag: false", "brandIndicator: H")
     @POST("ac/v2/rcs/rdo/on")
     suspend fun unlockDoors(
-        @Header("access_token") accessToken: String,
+        @Header("accessToken") accessToken: String,
         @Header("client_id") clientId: String,
-        @Header("vehicleId") vehicleId: String,
-        @Header("VIN") vin: String,
+        @Header("clientSecret") clientSecret: String,
+        @Header("blueLinkServicePin") pin: String,
+        @Header("username") username: String,
+        @Header("registrationId") registrationId: String,
+        @Header("gen") gen: String,
+        @Header("vin") vin: String,
+        @Header("APPCLOUD-VIN") appcloudVin: String,
+        @Header("offset") offset: String,
         @Body body: UsCommandBody,
     ): Response<UsCommandResponse>
 
-    // ─── Engine ───────────────────────────────────────────────────────────
+    // ─── Engine (ICE) ─────────────────────────────────────────────────────
 
+    @Headers("from: SPA", "to: ISS", "language: 0", "encryptFlag: false", "brandIndicator: H")
     @POST("ac/v2/rcs/rsc/start")
     suspend fun startEngine(
-        @Header("access_token") accessToken: String,
+        @Header("accessToken") accessToken: String,
         @Header("client_id") clientId: String,
-        @Header("vehicleId") vehicleId: String,
-        @Header("VIN") vin: String,
+        @Header("clientSecret") clientSecret: String,
+        @Header("blueLinkServicePin") pin: String,
+        @Header("username") username: String,
+        @Header("registrationId") registrationId: String,
+        @Header("gen") gen: String,
+        @Header("vin") vin: String,
+        @Header("offset") offset: String,
         @Body request: UsClimateRequest,
     ): Response<UsCommandResponse>
 
+    @Headers("from: SPA", "to: ISS", "language: 0", "encryptFlag: false", "brandIndicator: H")
     @POST("ac/v2/rcs/rsc/stop")
     suspend fun stopEngine(
-        @Header("access_token") accessToken: String,
+        @Header("accessToken") accessToken: String,
         @Header("client_id") clientId: String,
-        @Header("vehicleId") vehicleId: String,
-        @Header("VIN") vin: String,
+        @Header("clientSecret") clientSecret: String,
+        @Header("blueLinkServicePin") pin: String,
+        @Header("username") username: String,
+        @Header("registrationId") registrationId: String,
+        @Header("gen") gen: String,
+        @Header("vin") vin: String,
+        @Header("offset") offset: String,
         @Body body: UsCommandBody,
     ): Response<UsCommandResponse>
 
     // ─── EV Climate ───────────────────────────────────────────────────────
 
+    @Headers("from: SPA", "to: ISS", "language: 0", "encryptFlag: false", "brandIndicator: H")
     @POST("ac/v2/evc/fatc/start")
     suspend fun startClimate(
-        @Header("access_token") accessToken: String,
+        @Header("accessToken") accessToken: String,
         @Header("client_id") clientId: String,
-        @Header("vehicleId") vehicleId: String,
-        @Header("VIN") vin: String,
+        @Header("clientSecret") clientSecret: String,
+        @Header("blueLinkServicePin") pin: String,
+        @Header("username") username: String,
+        @Header("registrationId") registrationId: String,
+        @Header("gen") gen: String,
+        @Header("vin") vin: String,
+        @Header("offset") offset: String,
         @Body request: UsClimateRequest,
     ): Response<UsCommandResponse>
 
+    @Headers("from: SPA", "to: ISS", "language: 0", "encryptFlag: false", "brandIndicator: H")
     @POST("ac/v2/evc/fatc/stop")
     suspend fun stopClimate(
-        @Header("access_token") accessToken: String,
+        @Header("accessToken") accessToken: String,
         @Header("client_id") clientId: String,
-        @Header("vehicleId") vehicleId: String,
-        @Header("VIN") vin: String,
+        @Header("clientSecret") clientSecret: String,
+        @Header("blueLinkServicePin") pin: String,
+        @Header("username") username: String,
+        @Header("registrationId") registrationId: String,
+        @Header("gen") gen: String,
+        @Header("vin") vin: String,
+        @Header("offset") offset: String,
         @Body body: UsCommandBody,
     ): Response<UsCommandResponse>
 
     // ─── EV Charge ────────────────────────────────────────────────────────
 
+    @Headers("from: SPA", "to: ISS", "language: 0", "encryptFlag: false", "brandIndicator: H")
     @POST("ac/v2/evc/charge/start")
     suspend fun startCharge(
-        @Header("access_token") accessToken: String,
+        @Header("accessToken") accessToken: String,
         @Header("client_id") clientId: String,
-        @Header("vehicleId") vehicleId: String,
-        @Header("VIN") vin: String,
+        @Header("clientSecret") clientSecret: String,
+        @Header("blueLinkServicePin") pin: String,
+        @Header("username") username: String,
+        @Header("registrationId") registrationId: String,
+        @Header("gen") gen: String,
+        @Header("vin") vin: String,
+        @Header("offset") offset: String,
         @Body request: UsChargeBody,
     ): Response<UsCommandResponse>
 
+    @Headers("from: SPA", "to: ISS", "language: 0", "encryptFlag: false", "brandIndicator: H")
     @POST("ac/v2/evc/charge/stop")
     suspend fun stopCharge(
-        @Header("access_token") accessToken: String,
+        @Header("accessToken") accessToken: String,
         @Header("client_id") clientId: String,
-        @Header("vehicleId") vehicleId: String,
-        @Header("VIN") vin: String,
+        @Header("clientSecret") clientSecret: String,
+        @Header("blueLinkServicePin") pin: String,
+        @Header("username") username: String,
+        @Header("registrationId") registrationId: String,
+        @Header("gen") gen: String,
+        @Header("vin") vin: String,
+        @Header("offset") offset: String,
         @Body request: UsChargeBody,
     ): Response<UsCommandResponse>
 
+    @Headers("from: SPA", "to: ISS", "language: 0", "encryptFlag: false", "brandIndicator: H")
     @PUT("ac/v2/evc/soc")
     suspend fun setChargeTarget(
-        @Header("access_token") accessToken: String,
+        @Header("accessToken") accessToken: String,
         @Header("client_id") clientId: String,
-        @Header("vehicleId") vehicleId: String,
-        @Header("VIN") vin: String,
+        @Header("clientSecret") clientSecret: String,
+        @Header("blueLinkServicePin") pin: String,
+        @Header("username") username: String,
+        @Header("registrationId") registrationId: String,
+        @Header("gen") gen: String,
+        @Header("vin") vin: String,
+        @Header("offset") offset: String,
         @Body request: UsChargeTargetRequest,
     ): Response<UsCommandResponse>
 
     // ─── Horn + Lights ────────────────────────────────────────────────────
 
+    @Headers("from: SPA", "to: ISS", "language: 0", "encryptFlag: false", "brandIndicator: H")
     @POST("ac/v2/rcs/rfc/horn")
     suspend fun honkHorn(
-        @Header("access_token") accessToken: String,
+        @Header("accessToken") accessToken: String,
         @Header("client_id") clientId: String,
-        @Header("vehicleId") vehicleId: String,
-        @Header("VIN") vin: String,
+        @Header("clientSecret") clientSecret: String,
+        @Header("blueLinkServicePin") pin: String,
+        @Header("username") username: String,
+        @Header("registrationId") registrationId: String,
+        @Header("gen") gen: String,
+        @Header("vin") vin: String,
+        @Header("offset") offset: String,
         @Body body: UsCommandBody,
     ): Response<UsCommandResponse>
 
+    @Headers("from: SPA", "to: ISS", "language: 0", "encryptFlag: false", "brandIndicator: H")
     @POST("ac/v2/rcs/rfc/light")
     suspend fun flashLights(
-        @Header("access_token") accessToken: String,
+        @Header("accessToken") accessToken: String,
         @Header("client_id") clientId: String,
-        @Header("vehicleId") vehicleId: String,
-        @Header("VIN") vin: String,
+        @Header("clientSecret") clientSecret: String,
+        @Header("blueLinkServicePin") pin: String,
+        @Header("username") username: String,
+        @Header("registrationId") registrationId: String,
+        @Header("gen") gen: String,
+        @Header("vin") vin: String,
+        @Header("offset") offset: String,
         @Body body: UsCommandBody,
     ): Response<UsCommandResponse>
 }

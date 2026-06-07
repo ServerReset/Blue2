@@ -21,6 +21,7 @@ data class UsEnrolledVehicle(
 @JsonClass(generateAdapter = true)
 data class UsVehicleDetails(
     @Json(name = "vin") val vin: String?,
+    @Json(name = "regid") val regId: String?,            // registration ID used in API headers
     @Json(name = "vehicleIdentifier") val vehicleIdentifier: String?,
     @Json(name = "nickName") val nickName: String?,
     @Json(name = "modelName") val modelName: String?,
@@ -29,6 +30,7 @@ data class UsVehicleDetails(
     @Json(name = "licensePlate") val licensePlate: String?,
     @Json(name = "fuelType") val fuelType: String?,
     @Json(name = "trim") val trim: String?,
+    @Json(name = "vehicleGeneration") val vehicleGeneration: String?,
     @Json(name = "generation") val generation: String?,
     @Json(name = "enrollmentStatus") val enrollmentStatus: String?,
 )

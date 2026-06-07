@@ -19,6 +19,7 @@ data class LoginUiState(
     val region: BluelinkRegion = BluelinkRegion.US,
     val isLoading: Boolean = false,
     val error: String? = null,
+    val pinError: Boolean = false,
     val isLoggedIn: Boolean = false,
 )
 
@@ -31,7 +32,7 @@ class LoginViewModel @Inject constructor(
 
     fun setEmail(v: String) { _state.update { it.copy(email = v) } }
     fun setPassword(v: String) { _state.update { it.copy(password = v) } }
-    fun setPin(v: String) { _state.update { it.copy(pin = v) } }
+    fun setPin(v: String) { _state.update { it.copy(pin = v, pinError = false) } }
     fun setRegion(r: BluelinkRegion) { _state.update { it.copy(region = r) } }
     fun clearError() { _state.update { it.copy(error = null) } }
 
@@ -41,6 +42,11 @@ class LoginViewModel @Inject constructor(
             _state.update { it.copy(error = "Email and password are required") }
             return
         }
+        if (s.pin.isBlank()) {
+            _state.update { it.copy(error = "Bluelink PIN is required", pinError = true) }
+            return
+        }
+        _state.update { it.copy(pinError = false) }
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             repository.login(s.email.trim(), s.password, s.region, s.pin)

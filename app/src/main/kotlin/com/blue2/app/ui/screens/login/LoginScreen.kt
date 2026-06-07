@@ -137,7 +137,7 @@ fun LoginScreen(
                 shape = MaterialTheme.shapes.medium,
             )
 
-            // PIN field — shown for all regions; optional for US, required elsewhere
+            // PIN field — required for all regions
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(
                 value = state.pin,
@@ -145,9 +145,8 @@ fun LoginScreen(
                 label = {
                     Text(
                         when (state.region) {
-                            BluelinkRegion.CA -> "PIN (4 digits)"
-                            BluelinkRegion.US -> "PIN (optional)"
-                            else -> "Vehicle PIN"
+                            BluelinkRegion.CA -> "PIN (4 digits, required)"
+                            else -> "Bluelink PIN (required)"
                         }
                     )
                 },
@@ -162,14 +161,9 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.medium,
                 supportingText = {
-                    Text(
-                        when (state.region) {
-                            BluelinkRegion.US -> "PIN is optional for US Bluelink accounts"
-                            BluelinkRegion.CA -> "Required for Canadian Bluelink"
-                            else -> "Required for vehicle control commands"
-                        }
-                    )
+                    Text("Required for vehicle remote commands")
                 },
+                isError = state.pinError,
             )
 
             // Error message
