@@ -6,7 +6,6 @@ import androidx.wear.protolayout.ActionBuilders
 import androidx.wear.protolayout.LayoutElementBuilders
 import androidx.wear.protolayout.ResourceBuilders
 import androidx.wear.protolayout.TimelineBuilders
-import androidx.wear.protolayout.expression.ProtoLayoutExpressions
 import androidx.wear.tiles.*
 import com.blue2.app.domain.repository.IBluelinkRepository
 import com.google.android.horologist.tiles.SuspendingTileService
