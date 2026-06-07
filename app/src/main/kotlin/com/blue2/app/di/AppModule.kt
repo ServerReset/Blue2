@@ -59,12 +59,14 @@ object NetworkModule {
             .cookieJar(cookieJar)
             .addInterceptor(logging)
             .addInterceptor { chain ->
-                val request = chain.request().newBuilder()
+                val original = chain.request()
+                val builder = original.newBuilder()
                     .header("User-Agent", "okhttp/3.14.9")
                     .header("Accept-Encoding", "gzip")
-                    .header("Content-Type", "application/json")
-                    .build()
-                chain.proceed(request)
+                if (original.method != "GET" && original.method != "HEAD") {
+                    builder.header("Content-Type", "application/json")
+                }
+                chain.proceed(builder.build())
             }
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)

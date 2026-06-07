@@ -46,7 +46,7 @@ interface UsBluelinkApiService {
         @Header("gen") gen: String,
         @Header("vin") vin: String,
         @Header("offset") offset: String,
-        @Header("REFRESH") refresh: String? = null,
+        @Header("REFRESH") refresh: String = "false",
     ): Response<UsVehicleStatusResponse>
 
     // ─── Lock / Unlock ────────────────────────────────────────────────────

@@ -319,7 +319,7 @@ class BluelinkRepositoryImpl @Inject constructor(
             gen = gen,
             vin = vin,
             offset = utcOffset(),
-            refresh = if (forceRefresh) "true" else null,
+            refresh = if (forceRefresh) "true" else "false",
         )
         val body = resp.body()
         if (!resp.isSuccessful || body?.vehicleStatus == null)
