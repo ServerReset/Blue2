@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.wear.tiles)
     implementation(libs.wear.tiles.material)
     implementation(libs.horologist.tiles)
+    implementation("androidx.wear.protolayout:protolayout:1.0.0")
     implementation(libs.wearable)
 
     implementation(libs.hilt.android)
