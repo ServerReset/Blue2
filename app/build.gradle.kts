@@ -120,6 +120,9 @@ dependencies {
     implementation(libs.glance.appwidget)
     implementation(libs.glance.material3)
 
+    // Android Auto (Car App Library — phone-projected)
+    implementation(libs.car.app.library)
+
     // Wearable
     implementation(libs.wearable)
 

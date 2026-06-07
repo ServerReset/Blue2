@@ -15,12 +15,11 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import okhttp3.Cookie
 import okhttp3.CookieJar
-import okhttp3.JavaNetCookieJar
+import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import java.net.CookieManager
-import java.net.CookiePolicy
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
@@ -38,11 +37,16 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideCookieJar(): CookieJar {
-        val cookieManager = CookieManager().apply {
-            setCookiePolicy(CookiePolicy.ACCEPT_ALL)
+    fun provideCookieJar(): CookieJar = object : CookieJar {
+        private val store = mutableMapOf<String, MutableList<Cookie>>()
+        override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
+            store.getOrPut(url.host) { mutableListOf() }.apply {
+                removeAll { c -> cookies.any { it.name == c.name } }
+                addAll(cookies)
+            }
         }
-        return JavaNetCookieJar(cookieManager)
+        override fun loadForRequest(url: HttpUrl): List<Cookie> =
+            store[url.host]?.filter { it.expiresAt > System.currentTimeMillis() } ?: emptyList()
     }
 
     @Provides

@@ -18,4 +18,3 @@ dependencyResolutionManagement {
 rootProject.name = "Blue2"
 include(":app")
 include(":wear")
-include(":automotive")
