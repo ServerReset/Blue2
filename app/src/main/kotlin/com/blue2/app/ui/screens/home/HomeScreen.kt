@@ -112,13 +112,7 @@ fun HomeScreen(
     val pagerState = rememberPagerState(pageCount = { pages })
     LaunchedEffect(pagerState.currentPage) { viewModel.setPage(pagerState.currentPage) }
 
-    val pullRefreshState = rememberPullToRefreshState()
-    if (pullRefreshState.isRefreshing) {
-        LaunchedEffect(Unit) {
-            viewModel.refreshAll()
-            pullRefreshState.endRefresh()
-        }
-    }
+    val isRefreshing = state.isRefreshing || state.isLoadingVehicles
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHost) },
@@ -168,18 +162,19 @@ fun HomeScreen(
 
                 else -> {
                     Column(Modifier.fillMaxSize()) {
-                        // Pull-to-refresh indicator sits at the very top
-                        PullToRefreshContainer(
-                            state = pullRefreshState,
-                            modifier = Modifier.align(Alignment.CenterHorizontally),
-                        )
+                        // Thin animated refresh bar at the top
+                        AnimatedVisibility(
+                            visible = isRefreshing,
+                            enter = expandVertically(tween(200)),
+                            exit = shrinkVertically(tween(200)),
+                        ) {
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        }
 
                         // Pager takes all space except bottom strip
                         HorizontalPager(
                             state = pagerState,
-                            modifier = Modifier
-                                .weight(1f)
-                                .nestedScroll(pullRefreshState.nestedScrollConnection),
+                            modifier = Modifier.weight(1f),
                             pageSpacing = 0.dp,
                         ) { pageIndex ->
                             val startIdx = pageIndex * vehiclesPerPage
@@ -238,7 +233,7 @@ fun HomeScreen(
                             vehicles = state.vehicles,
                             pagerState = pagerState,
                             pages = pages,
-                            isRefreshing = state.isRefreshing || state.isLoadingVehicles,
+                            isRefreshing = isRefreshing,
                             onRefresh = { viewModel.refreshAll() },
                             onSettings = onSettings,
                             scope = scope,
