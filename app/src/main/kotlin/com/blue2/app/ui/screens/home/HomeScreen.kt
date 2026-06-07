@@ -3,10 +3,12 @@ package com.blue2.app.ui.screens.home
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.*
@@ -125,9 +127,11 @@ fun HomeScreen(
                         distanceUnit = state.distanceUnit,
                         tempUnit = state.tempUnit,
                         commandOrder = state.commandOrder,
+                        recentCommands = state.recentCommands,
                         viewModel = viewModel,
                         onStartClimate = { showClimateDialog = vehicle.vin },
                         onSetChargeTarget = { showChargeTargetDialog = vehicle.vin },
+                        onClearHistory = { viewModel.clearCommandHistory() },
                     )
                 }
             }
@@ -176,9 +180,11 @@ private fun VehiclePage(
     distanceUnit: String,
     tempUnit: String,
     commandOrder: List<String>,
+    recentCommands: List<CommandRecord>,
     viewModel: HomeViewModel,
     onStartClimate: () -> Unit,
     onSetChargeTarget: () -> Unit,
+    onClearHistory: () -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -217,6 +223,9 @@ private fun VehiclePage(
         if (status != null) {
             item { DiagnosticsCard(status, distanceUnit) }
         }
+        if (recentCommands.isNotEmpty()) {
+            item { RecentCommandsSection(recentCommands, onClearHistory) }
+        }
     }
 }
 
@@ -225,14 +234,15 @@ private fun VehiclePage(
 @Composable
 private fun StatusCard(vehicle: Vehicle, status: VehicleStatus?, distanceUnit: String) {
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            // Header row: name + lock badge
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
             ) {
-                Column {
-                    Text(vehicle.nickname, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(vehicle.nickname, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Text("${vehicle.modelYear} ${vehicle.modelName}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 if (status != null) LockBadge(status.isLocked)
@@ -243,10 +253,17 @@ private fun StatusCard(vehicle: Vehicle, status: VehicleStatus?, distanceUnit: S
                 return@Column
             }
 
+            // Big battery / fuel display
             when (vehicle.fuelType) {
                 FuelType.ELECTRIC, FuelType.PHEV -> {
                     status.evBatteryPercent?.let { pct ->
-                        LevelBar("Battery", pct, "~${formatDist(status.evRangeKm ?: 0.0, distanceUnit)} range", batteryColor(pct))
+                        BigLevelDisplay(
+                            icon = Icons.Rounded.BatteryChargingFull,
+                            label = "Battery",
+                            pct = pct,
+                            detail = "~${formatDist(status.evRangeKm ?: 0.0, distanceUnit)} range",
+                            color = batteryColor(pct),
+                        )
                     }
                     if (vehicle.fuelType == FuelType.PHEV) {
                         status.fuelLevelPercent?.let { pct ->
@@ -256,29 +273,92 @@ private fun StatusCard(vehicle: Vehicle, status: VehicleStatus?, distanceUnit: S
                 }
                 FuelType.GASOLINE, FuelType.HYBRID -> {
                     status.fuelLevelPercent?.let { pct ->
-                        LevelBar("Fuel", pct, "~${formatDist(status.fuelRangeKm ?: 0.0, distanceUnit)} range")
+                        BigLevelDisplay(
+                            icon = Icons.Rounded.LocalGasStation,
+                            label = "Fuel",
+                            pct = pct,
+                            detail = "~${formatDist(status.fuelRangeKm ?: 0.0, distanceUnit)} range",
+                            color = MaterialTheme.colorScheme.primary,
+                        )
                     }
                 }
             }
 
-            val indicators = buildList {
-                if (status.evCharging) add("Charging")
-                if (status.evPluggedIn && !status.evCharging) add("Plugged in")
-                if (status.climateOn) add("Climate on")
-                if (status.engineRunning) add("Engine running")
-                if (status.trunkOpen) add("Trunk open")
-                if (status.hoodOpen) add("Hood open")
-                val openDoors = listOf(status.doorFrontLeft, status.doorFrontRight, status.doorRearLeft, status.doorRearRight)
-                    .count { it == DoorState.OPEN }
-                if (openDoors > 0) add("$openDoors door${if (openDoors > 1) "s" else ""} open")
-                if (status.lightsOn) add("Lights on")
+            // Status chips row
+            val primaryContainerColor = MaterialTheme.colorScheme.primaryContainer
+            val onPrimaryContainerColor = MaterialTheme.colorScheme.onPrimaryContainer
+            val secondaryContainerColor = MaterialTheme.colorScheme.secondaryContainer
+            val onSecondaryContainerColor = MaterialTheme.colorScheme.onSecondaryContainer
+            val tertiaryContainerColor = MaterialTheme.colorScheme.tertiaryContainer
+            val onTertiaryContainerColor = MaterialTheme.colorScheme.onTertiaryContainer
+            val errorContainerColor = MaterialTheme.colorScheme.errorContainer
+            val onErrorContainerColor = MaterialTheme.colorScheme.onErrorContainer
+            val openDoors = listOf(status.doorFrontLeft, status.doorFrontRight, status.doorRearLeft, status.doorRearRight).count { it == DoorState.OPEN }
+            val chipData = buildList {
+                if (status.evCharging) add(Triple(Icons.Rounded.BatteryChargingFull, "Charging", primaryContainerColor to onPrimaryContainerColor))
+                else if (status.evPluggedIn) add(Triple(Icons.Rounded.Power, "Plugged In", secondaryContainerColor to onSecondaryContainerColor))
+                if (status.climateOn) add(Triple(Icons.Rounded.AcUnit, "Climate On", tertiaryContainerColor to onTertiaryContainerColor))
+                if (status.engineRunning) add(Triple(Icons.Rounded.PlayArrow, "Engine On", tertiaryContainerColor to onTertiaryContainerColor))
+                if (status.trunkOpen) add(Triple(Icons.Rounded.DirectionsCar, "Trunk Open", errorContainerColor to onErrorContainerColor))
+                if (status.hoodOpen) add(Triple(Icons.Rounded.Warning, "Hood Open", errorContainerColor to onErrorContainerColor))
+                if (openDoors > 0) add(Triple(Icons.Rounded.Warning, "$openDoors Door${if (openDoors > 1) "s" else ""} Open", errorContainerColor to onErrorContainerColor))
+                if (status.lightsOn) add(Triple(Icons.Rounded.FlashlightOn, "Lights On", secondaryContainerColor to onSecondaryContainerColor))
             }
-            if (indicators.isNotEmpty()) {
-                Text(indicators.joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (chipData.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    chipData.forEach { (icon, label, colors) ->
+                        Surface(color = colors.first, shape = MaterialTheme.shapes.small) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Icon(icon, null, Modifier.size(12.dp), tint = colors.second)
+                                Text(label, style = MaterialTheme.typography.labelSmall, color = colors.second)
+                            }
+                        }
+                    }
+                }
             }
 
             val fmt = remember { SimpleDateFormat("h:mm a", Locale.getDefault()) }
             Text("Updated ${fmt.format(Date(status.timestamp))}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+        }
+    }
+}
+
+@Composable
+private fun BigLevelDisplay(icon: ImageVector, label: String, pct: Int, detail: String, color: Color) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Surface(color = color.copy(alpha = 0.15f), shape = MaterialTheme.shapes.medium) {
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Icon(icon, null, Modifier.size(20.dp), tint = color)
+                Text("$pct%", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = color)
+            }
+        }
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(label, style = MaterialTheme.typography.labelMedium)
+                Text(detail, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            LinearProgressIndicator(
+                progress = { pct / 100f },
+                modifier = Modifier.fillMaxWidth().height(8.dp),
+                color = color,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+            )
         }
     }
 }
@@ -885,6 +965,89 @@ private fun ChargeTargetDialog(onDismiss: () -> Unit, onConfirm: (Int, Int) -> U
         confirmButton = { Button(onClick = { onConfirm(acTarget.toInt(), dcTarget.toInt()) }) { Text("Set") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
     )
+}
+
+// ─── Recent Commands ─────────────────────────────────────────────────────────
+
+@Composable
+private fun RecentCommandsSection(commands: List<CommandRecord>, onClear: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Rounded.History, null, tint = MaterialTheme.colorScheme.primary)
+                    Text("Recent Commands", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                }
+                TextButton(onClick = onClear, contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)) {
+                    Text("Clear", style = MaterialTheme.typography.labelMedium)
+                }
+            }
+
+            commands.take(10).forEachIndexed { index, record ->
+                if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                CommandHistoryRow(record)
+            }
+        }
+    }
+}
+
+@Composable
+private fun CommandHistoryRow(record: CommandRecord) {
+    val successColor = MaterialTheme.colorScheme.primary
+    val failColor = MaterialTheme.colorScheme.error
+    val successBg = MaterialTheme.colorScheme.primaryContainer
+    val failBg = MaterialTheme.colorScheme.errorContainer
+    val successOnBg = MaterialTheme.colorScheme.onPrimaryContainer
+    val failOnBg = MaterialTheme.colorScheme.onErrorContainer
+
+    val relativeTime = remember(record.timestampMs) {
+        val diff = System.currentTimeMillis() - record.timestampMs
+        when {
+            diff < 60_000 -> "just now"
+            diff < 3_600_000 -> "${diff / 60_000}m ago"
+            diff < 86_400_000 -> "${diff / 3_600_000}h ago"
+            else -> SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(record.timestampMs))
+        }
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Surface(
+            color = if (record.success) successBg else failBg,
+            shape = MaterialTheme.shapes.extraSmall,
+            modifier = Modifier.size(32.dp),
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    if (record.success) Icons.Rounded.Check else Icons.Rounded.Close,
+                    null,
+                    Modifier.size(16.dp),
+                    tint = if (record.success) successOnBg else failOnBg,
+                )
+            }
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(record.commandName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+            Text(
+                "${record.vehicleNickname} · ${record.detail}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+            )
+        }
+        Text(
+            relativeTime,
+            style = MaterialTheme.typography.labelSmall,
+            color = if (record.success) successColor else failColor,
+        )
+    }
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

@@ -57,6 +57,9 @@ class AppPreferences @Inject constructor(
 
         // Home command order: comma-separated command keys
         val COMMAND_ORDER = stringPreferencesKey("command_order")
+
+        // Recent command history: JSON array
+        val COMMAND_HISTORY = stringPreferencesKey("command_history")
     }
 
     val accessToken: Flow<String?> = dataStore.data
@@ -252,6 +255,12 @@ class AppPreferences @Inject constructor(
     suspend fun clearLog() { dataStore.edit { it[APP_LOG] = "" } }
 
     suspend fun setCommandOrder(order: String) { dataStore.edit { it[COMMAND_ORDER] = order } }
+
+    val commandHistory: Flow<String?> = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[COMMAND_HISTORY] }
+
+    suspend fun setCommandHistory(json: String) { dataStore.edit { it[COMMAND_HISTORY] = json } }
 
     suspend fun getAccessTokenOnce(): String? =
         dataStore.data.catch { if (it is IOException) emit(emptyPreferences()) else throw it }

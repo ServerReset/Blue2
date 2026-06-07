@@ -1015,7 +1015,7 @@ private fun UsVehicleStatus.toDomain(vin: String, moshi: Moshi): VehicleStatus {
         longitude = longitude,
         heading = heading,
         speed = speed?.value?.let { if (speed.unit == 1) it * 1.60934 else it },
-        odometer = odometer?.value?.let { if (odometer.unit == 1) it * 1.60934 else it },
+        odometer = odometer,
         tirePressureFrontLeft = tirePressure?.frontLeft,
         tirePressureFrontRight = tirePressure?.frontRight,
         tirePressureRearLeft = tirePressure?.backLeft,

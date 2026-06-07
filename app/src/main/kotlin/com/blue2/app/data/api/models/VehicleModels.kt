@@ -56,7 +56,7 @@ data class UsVehicleStatus(
     @Json(name = "evStatus") val evStatus: UsEvStatus?,
     @Json(name = "battery") val battery: UsBattery?,
     @Json(name = "climate") val climate: UsClimate?,
-    @Json(name = "odometer") val odometer: UsOdometer?,
+    @Json(name = "odometer") val odometer: Double?,  // API returns plain number, not object
     @Json(name = "tirePressure") val tirePressure: UsTirePressure?,
     @Json(name = "lowFuelLight") val lowFuelLight: Boolean?,
     @Json(name = "dte") val dte: UsDte?,
