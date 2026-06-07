@@ -1,12 +1,18 @@
 package com.blue2.app.ui.screens.settings
 
+import android.Manifest
+import android.bluetooth.BluetoothManager
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -20,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.blue2.app.domain.models.Vehicle
@@ -360,9 +367,30 @@ private fun AutoLockRow(
     config: com.blue2.app.data.local.database.AutoLockConfigEntity?,
     onSave: (Boolean, String?, String?, Int) -> Unit,
 ) {
+    val context = LocalContext.current
     var enabled by remember(config) { mutableStateOf(config?.enabled ?: false) }
     var delay by remember(config) { mutableStateOf(config?.delaySeconds ?: 30) }
-    var showDetails by remember { mutableStateOf(false) }
+    var selectedDeviceName by remember(config) { mutableStateOf(config?.bluetoothDeviceName) }
+    var selectedDeviceAddress by remember(config) { mutableStateOf(config?.bluetoothDeviceAddress) }
+    var showPicker by remember { mutableStateOf(false) }
+
+    // Permission launcher for BLUETOOTH_CONNECT (API 31+)
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted -> if (granted) showPicker = true }
+
+    fun launchPicker() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val permission = Manifest.permission.BLUETOOTH_CONNECT
+            if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
+                showPicker = true
+            } else {
+                permissionLauncher.launch(permission)
+            }
+        } else {
+            showPicker = true
+        }
+    }
 
     Column {
         Row(
@@ -372,16 +400,39 @@ private fun AutoLockRow(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(vehicle.nickname, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                if (config?.bluetoothDeviceName != null) {
-                    Text("BT: ${config.bluetoothDeviceName}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (selectedDeviceName != null) {
+                    Text(
+                        "Trigger: $selectedDeviceName",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                } else if (enabled) {
+                    Text(
+                        "No device selected — tap to choose",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
                 }
             }
-            Switch(checked = enabled, onCheckedChange = {
-                enabled = it
-                onSave(it, config?.bluetoothDeviceName, config?.bluetoothDeviceAddress, delay)
+            Switch(checked = enabled, onCheckedChange = { v ->
+                enabled = v
+                onSave(v, selectedDeviceName, selectedDeviceAddress, delay)
             })
         }
+
         if (enabled) {
+            Spacer(Modifier.height(8.dp))
+
+            // Bluetooth device picker button
+            OutlinedButton(
+                onClick = { launchPicker() },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Icon(Icons.Rounded.Bluetooth, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(selectedDeviceName ?: "Select Bluetooth Device")
+            }
+
             Spacer(Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -395,9 +446,55 @@ private fun AutoLockRow(
                 onValueChange = { delay = it.toInt() },
                 valueRange = 10f..120f,
                 onValueChangeFinished = {
-                    onSave(enabled, config?.bluetoothDeviceName, config?.bluetoothDeviceAddress, delay)
+                    onSave(enabled, selectedDeviceName, selectedDeviceAddress, delay)
                 },
             )
         }
+    }
+
+    // Bluetooth device picker dialog
+    if (showPicker) {
+        val bluetoothManager = context.getSystemService(BluetoothManager::class.java)
+        val pairedDevices = remember {
+            try {
+                bluetoothManager?.adapter?.bondedDevices?.toList() ?: emptyList()
+            } catch (e: SecurityException) {
+                emptyList()
+            }
+        }
+
+        AlertDialog(
+            onDismissRequest = { showPicker = false },
+            title = { Text("Select Bluetooth Device") },
+            text = {
+                if (pairedDevices.isEmpty()) {
+                    Text(
+                        "No paired Bluetooth devices found. Pair your car's Bluetooth in Android Settings first.",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                } else {
+                    LazyColumn(modifier = Modifier.heightIn(max = 320.dp)) {
+                        items(pairedDevices) { device ->
+                            val name = try { device.name ?: device.address } catch (e: SecurityException) { device.address }
+                            val address = device.address
+                            ListItem(
+                                headlineContent = { Text(name) },
+                                supportingContent = { Text(address, style = MaterialTheme.typography.labelSmall) },
+                                leadingContent = { Icon(Icons.Rounded.Bluetooth, null) },
+                                modifier = Modifier.clickable {
+                                    selectedDeviceName = name
+                                    selectedDeviceAddress = address
+                                    onSave(enabled, name, address, delay)
+                                    showPicker = false
+                                },
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showPicker = false }) { Text("Cancel") }
+            },
+        )
     }
 }
