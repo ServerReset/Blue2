@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Blue2 launcher icon — stylised car silhouette on blue background -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M72,42L36,42C33.6,42 31.5,43.5 30.6,45.8L27,56L27,72C27,73.1 27.9,74 29,74L31,74C32.1,74 33,73.1 33,72L33,70L75,70L75,72C75,73.1 75.9,74 77,74L79,74C80.1,74 81,73.1 81,72L81,56L77.4,45.8C76.5,43.5 74.4,42 72,42ZM36,64C34.3,64 33,62.7 33,61C33,59.3 34.3,58 36,58C37.7,58 39,59.3 39,61C39,62.7 37.7,64 36,64ZM72,64C70.3,64 69,62.7 69,61C69,59.3 70.3,58 72,58C73.7,58 75,59.3 75,61C75,62.7 73.7,64 72,64ZM33,54L35.5,46.5C36,45 37.4,44 39,44L69,44C70.6,44 72,45 72.5,46.5L75,54L33,54Z" />
+    <!-- "2" text mark -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:alpha="0.6"
+        android:pathData="M50,78L58,78L58,80L50,80Z" />
+</vector>

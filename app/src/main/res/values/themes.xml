@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Blue2" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowSplashScreenBackground">#0077C8</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_car</item>
+    </style>
+</resources>
