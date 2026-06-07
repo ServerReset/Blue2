@@ -67,8 +67,7 @@ fun AppNavigation(
 
         composable(Destinations.HOME) {
             HomeScreen(
-                onDiagnostics = { vin -> navController.navigate(Destinations.diagnostics(vin)) },
-                onSettings = { navController.navigate(Destinations.SETTINGS) },
+                onNavigateToSettings = { navController.navigate(Destinations.SETTINGS) },
             )
         }
 

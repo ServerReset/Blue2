@@ -8,7 +8,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -88,16 +87,11 @@ fun HomeScreen(
                 }
             }
             else -> {
-                PullToRefreshBox(
-                    isRefreshing = state.isRefreshing,
-                    onRefresh = { currentVehicle?.let { viewModel.refreshStatus(it.vin, forceRefresh = true) } },
+                LazyColumn(
                     modifier = Modifier.fillMaxSize().padding(padding),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
                         if (state.vehicles.size > 1) {
                             item {
                                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -142,12 +136,10 @@ fun HomeScreen(
                                 )
                             }
                         }
-                    }
                 }
             }
         }
     }
-
     showClimateDialog?.let { vin ->
         val vehicle = state.vehicles.find { it.vin == vin }
         ClimateDialog(
