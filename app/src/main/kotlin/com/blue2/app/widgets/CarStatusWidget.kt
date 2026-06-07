@@ -76,7 +76,7 @@ class CarStatusWidget : GlanceAppWidget() {
                     when {
                         size.width >= 300.dp && size.height >= 200.dp -> LargeWidget(vehicle, status, vin)
                         size.width >= 300.dp -> MediumWidget(vehicle, status, vin)
-                        else -> SmallWidget(vehicle, status, vin)
+                        else -> SmallWidget(vehicle, status)
                     }
                 }
             }
@@ -85,7 +85,7 @@ class CarStatusWidget : GlanceAppWidget() {
 }
 
 @Composable
-private fun SmallWidget(vehicle: com.blue2.app.domain.models.Vehicle, status: VehicleStatus, vin: String) {
+private fun SmallWidget(vehicle: com.blue2.app.domain.models.Vehicle, status: VehicleStatus) {
     Column(
         modifier = GlanceModifier.fillMaxSize().background(GlanceTheme.colors.surface).padding(12.dp),
         verticalAlignment = Alignment.Vertical.CenterVertically,

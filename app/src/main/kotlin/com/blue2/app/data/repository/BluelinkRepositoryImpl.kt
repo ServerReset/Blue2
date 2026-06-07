@@ -756,7 +756,6 @@ class BluelinkRepositoryImpl @Inject constructor(
                 BluelinkRegion.CA -> prefs.getCaPinOnce()?.let { currentVehiclePin = it }
                 BluelinkRegion.EU, BluelinkRegion.AU, BluelinkRegion.ME ->
                     prefs.getEuPinOnce()?.let { currentVehiclePin = it }
-                else -> Unit
             }
         }
         if (currentEuControlToken.isEmpty()) {

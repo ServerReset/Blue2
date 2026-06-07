@@ -11,6 +11,7 @@ import androidx.compose.foundation.pager.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -1078,7 +1079,7 @@ private fun SecondaryActionsRow(
             modifier = Modifier.weight(1f),
         )
         SecondaryIconButton(
-            icon = Icons.Rounded.VolumeUp,
+            icon = Icons.AutoMirrored.Rounded.VolumeUp,
             label = "Horn",
             isLoading = viewModel.isCommandLoading(vehicle.vin, "horn"),
             onClick = {
