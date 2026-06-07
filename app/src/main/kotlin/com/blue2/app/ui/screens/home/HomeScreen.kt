@@ -1,6 +1,7 @@
 package com.blue2.app.ui.screens.home
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -363,10 +364,7 @@ private fun LockUnlockRow(vin: String, isLocked: Boolean?, viewModel: HomeViewMo
             enabled = !unlockLoading,
             modifier = Modifier.weight(1f).height(80.dp),
             shape = MaterialTheme.shapes.large,
-            border = if (isLocked == false)
-                ButtonDefaults.outlinedButtonBorder(enabled = true).copy(brush = SolidColor(errorColor))
-            else
-                ButtonDefaults.outlinedButtonBorder(enabled = !unlockLoading).copy(brush = SolidColor(outlineBorderColor)),
+            border = BorderStroke(1.dp, SolidColor(if (isLocked == false) errorColor else outlineBorderColor)),
         ) {
             if (unlockLoading) {
                 CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.5.dp)
