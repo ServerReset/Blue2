@@ -54,6 +54,9 @@ class AppPreferences @Inject constructor(
 
         // Log
         val APP_LOG = stringPreferencesKey("app_log")
+
+        // Home command order: comma-separated command keys
+        val COMMAND_ORDER = stringPreferencesKey("command_order")
     }
 
     val accessToken: Flow<String?> = dataStore.data
@@ -130,6 +133,10 @@ class AppPreferences @Inject constructor(
     val lastSelectedVin: Flow<String?> = dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[LAST_SELECTED_VIN] }
+
+    val commandOrder: Flow<String?> = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[COMMAND_ORDER] }
 
     val appLog: Flow<String> = dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
@@ -243,6 +250,8 @@ class AppPreferences @Inject constructor(
     }
 
     suspend fun clearLog() { dataStore.edit { it[APP_LOG] = "" } }
+
+    suspend fun setCommandOrder(order: String) { dataStore.edit { it[COMMAND_ORDER] = order } }
 
     suspend fun getAccessTokenOnce(): String? =
         dataStore.data.catch { if (it is IOException) emit(emptyPreferences()) else throw it }
