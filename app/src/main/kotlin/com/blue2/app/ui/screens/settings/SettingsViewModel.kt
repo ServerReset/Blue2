@@ -19,6 +19,7 @@ import javax.inject.Inject
 
 data class SettingsUiState(
     val themeMode: String = "system",
+    val themeStyle: String = "material_expressive",
     val dynamicColor: Boolean = true,
     val amoledMode: Boolean = false,
     val useAtkinsonFont: Boolean = false,
@@ -46,22 +47,15 @@ class SettingsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            combine(
-                prefs.themeMode,
-                prefs.dynamicColor,
-                prefs.amoledMode,
-                prefs.useAtkinsonFont,
-            ) { tm, dc, am, af -> listOf(tm, dc.toString(), am.toString(), af.toString()) }
-                .collect { values ->
-                    _state.update { st ->
-                        st.copy(
-                            themeMode = values[0],
-                            dynamicColor = values[1].toBoolean(),
-                            amoledMode = values[2].toBoolean(),
-                            useAtkinsonFont = values[3].toBoolean(),
-                        )
-                    }
-                }
+            combine(prefs.themeMode, prefs.themeStyle) { tm, ts -> tm to ts }
+                .collect { (tm, ts) -> _state.update { st -> st.copy(themeMode = tm, themeStyle = ts) } }
+        }
+        viewModelScope.launch {
+            combine(prefs.dynamicColor, prefs.amoledMode, prefs.useAtkinsonFont) { dc, am, af ->
+                Triple(dc, am, af)
+            }.collect { (dc, am, af) ->
+                _state.update { st -> st.copy(dynamicColor = dc, amoledMode = am, useAtkinsonFont = af) }
+            }
         }
         viewModelScope.launch {
             combine(prefs.distanceUnit, prefs.tempUnit, prefs.autoRefreshIntervalMin) { d, t, r -> Triple(d, t, r) }
@@ -90,6 +84,7 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setThemeMode(mode: String) { viewModelScope.launch { prefs.setThemeMode(mode) } }
+    fun setThemeStyle(style: String) { viewModelScope.launch { prefs.setThemeStyle(style) } }
     fun setDynamicColor(v: Boolean) { viewModelScope.launch { prefs.setDynamicColor(v) } }
     fun setAmoledMode(v: Boolean) { viewModelScope.launch { prefs.setAmoledMode(v) } }
     fun setAtkinsonFont(v: Boolean) { viewModelScope.launch { prefs.setUseAtkinsonFont(v) } }

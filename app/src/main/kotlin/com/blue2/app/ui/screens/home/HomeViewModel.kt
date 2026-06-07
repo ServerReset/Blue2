@@ -115,6 +115,8 @@ class HomeViewModel @Inject constructor(
     fun stopCharge(vin: String) = sendCommand(vin, "charge") { repository.stopCharge(vin) }
     fun flashLights(vin: String) = sendCommand(vin, "lights") { repository.flashLights(vin) }
     fun honkHorn(vin: String) = sendCommand(vin, "horn") { repository.honkHorn(vin) }
+    fun setChargeTarget(vin: String, acPct: Int, dcPct: Int) =
+        sendCommand(vin, "chargeTarget") { repository.setChargeTarget(vin, acPct, dcPct) }
 
     private fun commandKey(vin: String, cmd: String) = "${vin}_${cmd}"
 

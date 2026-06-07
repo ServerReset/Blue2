@@ -34,6 +34,13 @@ data class UsChargeBody(
 )
 
 @JsonClass(generateAdapter = true)
+data class UsCommandBody(
+    @Json(name = "userName") val userName: String,
+    @Json(name = "vin") val vin: String,
+    @Json(name = "pin") val pin: String = "",
+)
+
+@JsonClass(generateAdapter = true)
 data class UsClimateRequest(
     @Json(name = "Ims") val ims: Int = 0,
     @Json(name = "airCtrl") val airCtrl: Int = 1,

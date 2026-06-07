@@ -5,14 +5,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.blue2.app.data.local.preferences.AppPreferences
 import com.blue2.app.ui.navigation.AppNavigation
 import com.blue2.app.ui.navigation.Destinations
+import com.blue2.app.ui.theme.AppThemeStyle
 import com.blue2.app.ui.theme.Blue2Theme
 import com.blue2.app.ui.theme.ThemeMode
 import dagger.hilt.android.AndroidEntryPoint
@@ -26,19 +25,15 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var prefs: AppPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        var isLoggedIn = false
-        installSplashScreen().setKeepOnScreenCondition {
-            // Keep splash until we know auth state
-            false
-        }
+        installSplashScreen().setKeepOnScreenCondition { false }
         super.onCreate(savedInstanceState)
 
-        // Determine start destination synchronously
-        isLoggedIn = runBlocking { prefs.isLoggedIn.first() }
+        val isLoggedIn = runBlocking { prefs.isLoggedIn.first() }
 
         enableEdgeToEdge()
         setContent {
             val themeMode by prefs.themeMode.collectAsStateWithLifecycle(initialValue = "system")
+            val themeStyle by prefs.themeStyle.collectAsStateWithLifecycle(initialValue = "material_expressive")
             val dynamicColor by prefs.dynamicColor.collectAsStateWithLifecycle(initialValue = true)
             val amoledMode by prefs.amoledMode.collectAsStateWithLifecycle(initialValue = false)
             val useAtkinsonFont by prefs.useAtkinsonFont.collectAsStateWithLifecycle(initialValue = false)
@@ -48,6 +43,11 @@ class MainActivity : ComponentActivity() {
                     "light" -> ThemeMode.LIGHT
                     "dark" -> ThemeMode.DARK
                     else -> ThemeMode.SYSTEM
+                },
+                themeStyle = when (themeStyle) {
+                    "liquid_glass" -> AppThemeStyle.LIQUID_GLASS
+                    "one_ui" -> AppThemeStyle.ONE_UI
+                    else -> AppThemeStyle.MATERIAL_EXPRESSIVE
                 },
                 dynamicColor = dynamicColor,
                 amoledMode = amoledMode,

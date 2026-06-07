@@ -71,7 +71,10 @@ class BluelinkRepositoryImpl @Inject constructor(
         prefs.appendLog("Login: region=$region")
 
         when (region) {
-            BluelinkRegion.US -> loginUs(email, password, config)
+            BluelinkRegion.US -> {
+                loginUs(email, password, config)
+                if (pin.isNotBlank()) prefs.saveUsPin(pin)
+            }
             BluelinkRegion.CA -> {
                 loginCa(email, password, config)
                 if (pin.isNotBlank()) prefs.saveCaPin(pin)
@@ -284,6 +287,7 @@ class BluelinkRepositoryImpl @Inject constructor(
         vin: String,
         forceRefresh: Boolean,
     ): Result<VehicleStatus> = withAuth {
+        prefs.appendLog("Status fetch: vin=$vin region=$currentRegion force=$forceRefresh")
         val config = RegionConstants.forRegion(currentRegion)
         val vehicle = vehicleDao.getByVin(vin) ?: throw BluelinkError.VehicleNotFound(vin)
         val status = when (currentRegion) {
@@ -292,7 +296,10 @@ class BluelinkRepositoryImpl @Inject constructor(
             else -> fetchStatusEu(config, vin, vehicle.vehicleId, forceRefresh)
         }
         vehicleStatusDao.insert(status.toEntity())
+        prefs.appendLog("Status OK: vin=$vin")
         status
+    }.also { result ->
+        result.onFailure { prefs.appendLog("Status FAIL: $vin ${it.message}") }
     }
 
     private suspend fun fetchStatusUs(
@@ -396,7 +403,7 @@ class BluelinkRepositoryImpl @Inject constructor(
             BluelinkRegion.US -> usApi(config.baseUrl).lockDoors(
                 accessToken = currentAccessToken, clientId = config.clientId,
                 vehicleId = vehicle.vehicleId, vin = vin,
-                userName = currentEmail, vinField = vin,
+                body = UsCommandBody(userName = currentEmail, vin = vin, pin = currentVehiclePin),
             ).toUsResult()
             BluelinkRegion.CA -> {
                 val pAuth = ensureCaPAuth(config, vehicle.vehicleId)
@@ -425,7 +432,7 @@ class BluelinkRepositoryImpl @Inject constructor(
             BluelinkRegion.US -> usApi(config.baseUrl).unlockDoors(
                 accessToken = currentAccessToken, clientId = config.clientId,
                 vehicleId = vehicle.vehicleId, vin = vin,
-                userName = currentEmail, vinField = vin,
+                body = UsCommandBody(userName = currentEmail, vin = vin, pin = currentVehiclePin),
             ).toUsResult()
             BluelinkRegion.CA -> {
                 val pAuth = ensureCaPAuth(config, vehicle.vehicleId)
@@ -486,7 +493,7 @@ class BluelinkRepositoryImpl @Inject constructor(
                 BluelinkRegion.US -> usApi(config.baseUrl).stopEngine(
                     accessToken = currentAccessToken, clientId = config.clientId,
                     vehicleId = vehicle.vehicleId, vin = vin,
-                    userName = currentEmail, vinField = vin,
+                    body = UsCommandBody(userName = currentEmail, vin = vin, pin = currentVehiclePin),
                 ).toUsResult()
                 BluelinkRegion.CA -> {
                     val pAuth = ensureCaPAuth(config, vehicle.vehicleId)
@@ -546,7 +553,7 @@ class BluelinkRepositoryImpl @Inject constructor(
                 BluelinkRegion.US -> usApi(config.baseUrl).stopClimate(
                     accessToken = currentAccessToken, clientId = config.clientId,
                     vehicleId = vehicle.vehicleId, vin = vin,
-                    userName = currentEmail, vinField = vin,
+                    body = UsCommandBody(userName = currentEmail, vin = vin, pin = currentVehiclePin),
                 ).toUsResult()
                 BluelinkRegion.CA -> {
                     val pAuth = ensureCaPAuth(config, vehicle.vehicleId)
@@ -684,7 +691,7 @@ class BluelinkRepositoryImpl @Inject constructor(
                 BluelinkRegion.US -> usApi(config.baseUrl).flashLights(
                     accessToken = currentAccessToken, clientId = config.clientId,
                     vehicleId = vehicle.vehicleId, vin = vin,
-                    userName = currentEmail, vinField = vin,
+                    body = UsCommandBody(userName = currentEmail, vin = vin, pin = currentVehiclePin),
                 ).toUsResult()
                 BluelinkRegion.CA -> caApi(config.baseUrl).hornAndLights(
                     accessToken = currentAccessToken, userId = currentUserId,
@@ -702,7 +709,7 @@ class BluelinkRepositoryImpl @Inject constructor(
                 BluelinkRegion.US -> usApi(config.baseUrl).honkHorn(
                     accessToken = currentAccessToken, clientId = config.clientId,
                     vehicleId = vehicle.vehicleId, vin = vin,
-                    userName = currentEmail, vinField = vin,
+                    body = UsCommandBody(userName = currentEmail, vin = vin, pin = currentVehiclePin),
                 ).toUsResult()
                 BluelinkRegion.CA -> caApi(config.baseUrl).hornAndLights(
                     accessToken = currentAccessToken, userId = currentUserId,
@@ -745,6 +752,7 @@ class BluelinkRepositoryImpl @Inject constructor(
         }
         if (currentVehiclePin.isEmpty()) {
             when (currentRegion) {
+                BluelinkRegion.US -> prefs.getUsPinOnce()?.let { currentVehiclePin = it }
                 BluelinkRegion.CA -> prefs.getCaPinOnce()?.let { currentVehiclePin = it }
                 BluelinkRegion.EU, BluelinkRegion.AU, BluelinkRegion.ME ->
                     prefs.getEuPinOnce()?.let { currentVehiclePin = it }

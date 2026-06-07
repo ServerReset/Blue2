@@ -33,11 +33,13 @@ class AppPreferences @Inject constructor(
         val IS_LOGGED_IN = booleanPreferencesKey("is_logged_in")
         val CA_PIN = stringPreferencesKey("ca_pin")
         val EU_PIN = stringPreferencesKey("eu_pin")
+        val US_PIN = stringPreferencesKey("us_pin")
         val EU_CONTROL_TOKEN = stringPreferencesKey("eu_control_token")
         val EU_CONTROL_TOKEN_EXPIRY = longPreferencesKey("eu_control_token_expiry")
 
         // Theme
         val THEME_MODE = stringPreferencesKey("theme_mode")
+        val THEME_STYLE = stringPreferencesKey("theme_style")
         val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
         val AMOLED_MODE = booleanPreferencesKey("amoled_mode")
         val CUSTOM_SEED_COLOR = intPreferencesKey("custom_seed_color")
@@ -92,6 +94,10 @@ class AppPreferences @Inject constructor(
     val themeMode: Flow<String> = dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[THEME_MODE] ?: "system" }
+
+    val themeStyle: Flow<String> = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[THEME_STYLE] ?: "material_expressive" }
 
     val dynamicColor: Flow<Boolean> = dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
@@ -158,6 +164,10 @@ class AppPreferences @Inject constructor(
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[CA_PIN] }
 
+    val usPin: Flow<String?> = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[US_PIN] }
+
     val euControlToken: Flow<String?> = dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[EU_CONTROL_TOKEN] }
@@ -168,6 +178,7 @@ class AppPreferences @Inject constructor(
 
     suspend fun saveCaPin(pin: String) { dataStore.edit { it[CA_PIN] = pin } }
     suspend fun saveEuPin(pin: String) { dataStore.edit { it[EU_PIN] = pin } }
+    suspend fun saveUsPin(pin: String) { dataStore.edit { it[US_PIN] = pin } }
 
     suspend fun saveEuControlToken(token: String, expiresInSeconds: Long) {
         dataStore.edit { prefs ->
@@ -183,6 +194,10 @@ class AppPreferences @Inject constructor(
     suspend fun getEuPinOnce(): String? =
         dataStore.data.catch { if (it is IOException) emit(emptyPreferences()) else throw it }
             .map { it[EU_PIN] }.first()
+
+    suspend fun getUsPinOnce(): String? =
+        dataStore.data.catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+            .map { it[US_PIN] }.first()
 
     suspend fun getEuControlTokenOnce(): Pair<String?, Long> =
         dataStore.data.catch { if (it is IOException) emit(emptyPreferences()) else throw it }
@@ -201,6 +216,7 @@ class AppPreferences @Inject constructor(
     }
 
     suspend fun setThemeMode(mode: String) { dataStore.edit { it[THEME_MODE] = mode } }
+    suspend fun setThemeStyle(style: String) { dataStore.edit { it[THEME_STYLE] = style } }
     suspend fun setDynamicColor(enabled: Boolean) { dataStore.edit { it[DYNAMIC_COLOR] = enabled } }
     suspend fun setAmoledMode(enabled: Boolean) { dataStore.edit { it[AMOLED_MODE] = enabled } }
     suspend fun setCustomSeedColor(color: Int?) {

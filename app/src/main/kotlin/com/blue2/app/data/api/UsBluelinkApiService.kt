@@ -57,26 +57,22 @@ interface UsBluelinkApiService {
 
     // ─── Lock / Unlock ────────────────────────────────────────────────────
 
-    @FormUrlEncoded
     @POST("ac/v2/rcs/rdo/off")
     suspend fun lockDoors(
         @Header("access_token") accessToken: String,
         @Header("client_id") clientId: String,
         @Header("vehicleId") vehicleId: String,
         @Header("VIN") vin: String,
-        @Field("userName") userName: String,
-        @Field("vin") vinField: String,
+        @Body body: UsCommandBody,
     ): Response<UsCommandResponse>
 
-    @FormUrlEncoded
     @POST("ac/v2/rcs/rdo/on")
     suspend fun unlockDoors(
         @Header("access_token") accessToken: String,
         @Header("client_id") clientId: String,
         @Header("vehicleId") vehicleId: String,
         @Header("VIN") vin: String,
-        @Field("userName") userName: String,
-        @Field("vin") vinField: String,
+        @Body body: UsCommandBody,
     ): Response<UsCommandResponse>
 
     // ─── Engine ───────────────────────────────────────────────────────────
@@ -90,15 +86,13 @@ interface UsBluelinkApiService {
         @Body request: UsClimateRequest,
     ): Response<UsCommandResponse>
 
-    @FormUrlEncoded
     @POST("ac/v2/rcs/rsc/stop")
     suspend fun stopEngine(
         @Header("access_token") accessToken: String,
         @Header("client_id") clientId: String,
         @Header("vehicleId") vehicleId: String,
         @Header("VIN") vin: String,
-        @Field("userName") userName: String,
-        @Field("vin") vinField: String,
+        @Body body: UsCommandBody,
     ): Response<UsCommandResponse>
 
     // ─── EV Climate ───────────────────────────────────────────────────────
@@ -112,15 +106,13 @@ interface UsBluelinkApiService {
         @Body request: UsClimateRequest,
     ): Response<UsCommandResponse>
 
-    @FormUrlEncoded
     @POST("ac/v2/evc/fatc/stop")
     suspend fun stopClimate(
         @Header("access_token") accessToken: String,
         @Header("client_id") clientId: String,
         @Header("vehicleId") vehicleId: String,
         @Header("VIN") vin: String,
-        @Field("userName") userName: String,
-        @Field("vin") vinField: String,
+        @Body body: UsCommandBody,
     ): Response<UsCommandResponse>
 
     // ─── EV Charge ────────────────────────────────────────────────────────
@@ -154,25 +146,21 @@ interface UsBluelinkApiService {
 
     // ─── Horn + Lights ────────────────────────────────────────────────────
 
-    @FormUrlEncoded
     @POST("ac/v2/rcs/rfc/horn")
     suspend fun honkHorn(
         @Header("access_token") accessToken: String,
         @Header("client_id") clientId: String,
         @Header("vehicleId") vehicleId: String,
         @Header("VIN") vin: String,
-        @Field("userName") userName: String,
-        @Field("vin") vinField: String,
+        @Body body: UsCommandBody,
     ): Response<UsCommandResponse>
 
-    @FormUrlEncoded
     @POST("ac/v2/rcs/rfc/light")
     suspend fun flashLights(
         @Header("access_token") accessToken: String,
         @Header("client_id") clientId: String,
         @Header("vehicleId") vehicleId: String,
         @Header("VIN") vin: String,
-        @Field("userName") userName: String,
-        @Field("vin") vinField: String,
+        @Body body: UsCommandBody,
     ): Response<UsCommandResponse>
 }

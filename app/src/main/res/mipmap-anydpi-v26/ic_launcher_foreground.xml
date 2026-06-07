@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+  <!-- Car silhouette body -->
+  <path
+      android:fillColor="#FFFFFF"
+      android:pathData="M78,58 L75,46 C74,42 71,40 67,40 L41,40 C37,40 34,42 33,46 L30,58 L24,60 C22,61 21,63 21,65 L21,72 C21,74 23,76 25,76 L30,76 C30,80 33,83 37,83 C41,83 44,80 44,76 L64,76 C64,80 67,83 71,83 C75,83 78,80 78,76 L83,76 C85,76 87,74 87,72 L87,65 C87,63 86,61 84,60 Z" />
+  <!-- Windshield -->
+  <path
+      android:fillColor="#1565C0"
+      android:pathData="M65,42 L43,42 L38,57 L70,57 Z" />
+  <!-- Wheel left -->
+  <circle
+      android:fillColor="#1565C0"
+      android:cx="37" android:cy="76" android:r="6" />
+  <!-- Wheel right -->
+  <circle
+      android:fillColor="#1565C0"
+      android:cx="71" android:cy="76" android:r="6" />
+</vector>

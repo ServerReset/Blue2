@@ -32,3 +32,13 @@ jobs:
           name: Blue2-debug
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 7
+
+      - name: Build wear debug APK
+        run: ./gradlew :wear:assembleDebug --no-daemon
+
+      - name: Upload wear APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Blue2-wear-debug
+          path: wear/build/outputs/apk/debug/wear-debug.apk
+          retention-days: 7

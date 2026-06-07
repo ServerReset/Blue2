@@ -137,36 +137,40 @@ fun LoginScreen(
                 shape = MaterialTheme.shapes.medium,
             )
 
-            // PIN field (CA = required for all commands; EU/AU/ME = vehicle control PIN)
-            val needsPin = state.region in listOf(BluelinkRegion.CA, BluelinkRegion.EU, BluelinkRegion.AU, BluelinkRegion.ME)
-            AnimatedVisibility(visible = needsPin) {
-                Column {
-                    Spacer(Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = state.pin,
-                        onValueChange = { if (it.length <= 6) viewModel.setPin(it) },
-                        label = { Text(if (state.region == BluelinkRegion.CA) "PIN (4 digits)" else "Vehicle PIN") },
-                        leadingIcon = { Icon(Icons.Rounded.Pin, null) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = {
-                            focusManager.clearFocus()
-                            viewModel.login()
-                        }),
-                        visualTransformation = PasswordVisualTransformation(),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium,
-                        supportingText = {
-                            Text(
-                                if (state.region == BluelinkRegion.CA)
-                                    "Required for Canadian Bluelink"
-                                else
-                                    "Required for vehicle control commands"
-                            )
-                        },
+            // PIN field — shown for all regions; optional for US, required elsewhere
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(
+                value = state.pin,
+                onValueChange = { if (it.length <= 6) viewModel.setPin(it) },
+                label = {
+                    Text(
+                        when (state.region) {
+                            BluelinkRegion.CA -> "PIN (4 digits)"
+                            BluelinkRegion.US -> "PIN (optional)"
+                            else -> "Vehicle PIN"
+                        }
                     )
-                }
-            }
+                },
+                leadingIcon = { Icon(Icons.Rounded.Pin, null) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = {
+                    focusManager.clearFocus()
+                    viewModel.login()
+                }),
+                visualTransformation = PasswordVisualTransformation(),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
+                supportingText = {
+                    Text(
+                        when (state.region) {
+                            BluelinkRegion.US -> "PIN is optional for US Bluelink accounts"
+                            BluelinkRegion.CA -> "Required for Canadian Bluelink"
+                            else -> "Required for vehicle control commands"
+                        }
+                    )
+                },
+            )
 
             // Error message
             AnimatedVisibility(visible = state.error != null) {
